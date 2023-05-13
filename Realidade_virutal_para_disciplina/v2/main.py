@@ -8,7 +8,6 @@ Created on Sat Apr 29 18:35:18 2023
 
 import cv2
 import mediapipe as mp
-import time
 from contents.background import Background, WIDTH, HEIGHT
  
 #https://github.com/google/mediapipe/blob/master/docs/solutions/pose.md
@@ -26,7 +25,7 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 
 
 
-background = Background()  
+background = Background()
 
 
    
@@ -45,8 +44,7 @@ def main():
             mpDraw.draw_landmarks(img, results.pose_landmarks, mpPose.POSE_CONNECTIONS)     
             x, y = background.position(img, results, mpPose, mpDraw,15) 
             cv2.circle(img, (x, y), 5, (255, 0, 0), cv2.FILLED)
-            #x, y = background.position(img, results, mpPose, mpDraw,10) 
-            #cv2.circle(img, (x, y), 5, (255, 255, 0), cv2.FILLED)
+            
              
         
         background.draw(img, results, mpPose, mpDraw) 

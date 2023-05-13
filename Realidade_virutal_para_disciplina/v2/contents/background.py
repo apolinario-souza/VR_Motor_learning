@@ -8,27 +8,65 @@ Created on Sun Apr 30 10:20:50 2023
 import time
 import mediapipe as mp
 import cv2
+import numpy as np
 
 WIDTH, HEIGHT  = 500,500
 DIAMETER = 50
+BOLA_INICIAL = 200 
+ALTURA_MARCA = 50
 
 class Background:
     def __init__(self):
         self.current_time = []
         self.vel = 0        
-        self.y_bola_initial = 200 
+        self.y_bola_initial = BOLA_INICIAL
         self.y_bola = self.y_bola_initial
+        self.y_a = []
+        self.deriva = []
+        self.trial = 0
+        self.erro_bola = 0
         
         
     def draw_rectangle_init (self, win):
        pass   
     
-    def text_write (self, win, text, width, height):
+    def devPosition (self, win, text, width, height):
+        
         pass
         
     def draw_circule (self, img):
-        cv2.circle(img, (100, 100), 5, (255, 0, 0), cv2.FILLED)
+        cv2.circle(img, (200, 100), 5, (255, 0, 0), cv2.FILLED)
         pass
+    def draw_line_top (self, img):
+        ref_diameter = DIAMETER//2
+        start_point = (int(WIDTH*.9)-ref_diameter,BOLA_INICIAL-ref_diameter)
+        end_point = ((int(WIDTH*.9)-ref_diameter)+ALTURA_MARCA, BOLA_INICIAL-ref_diameter)
+        color = (0, 255, 0)
+        thickness = 9
+        cv2.line(img, start_point, end_point, color, thickness)
+        
+        return start_point, end_point
+    
+    def draw_line_bottom (self, img):
+        ref_diameter = DIAMETER//2
+        start_point = (int(WIDTH*.9)-ref_diameter,(BOLA_INICIAL-ref_diameter)+ALTURA_MARCA )
+        end_point = ((int(WIDTH*.9)-ref_diameter)+ALTURA_MARCA ,(BOLA_INICIAL-ref_diameter)+ALTURA_MARCA )
+        color = (0, 255, 0)
+        thickness = 9
+        cv2.line(img, start_point, end_point, color, thickness)
+        
+        return start_point, end_point
+    
+    def text (self, img, x,y, text):
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        fontScale = 1
+        color = (255, 0, 0)
+        thickness = 2
+        image = cv2.putText(img, text, (x,y), font, 
+                   fontScale, color, thickness, cv2.LINE_AA)
+        
+        
+    
     
     def flight_ball(self, ac, img):
         
@@ -45,7 +83,9 @@ class Background:
     
         self.y_bola += int(self.vel *1/60)
         
-        cv2.circle(img, (400, self.y_bola), DIAMETER, (255, 0, 0), cv2.FILLED)  
+        x_bola = int(WIDTH*.9)
+        
+        cv2.circle(img, (x_bola, self.y_bola), DIAMETER, (255, 0, 0), cv2.FILLED)  
     
     
         
@@ -68,15 +108,20 @@ class Background:
             self.cont = self.current_time[-1] - self.current_time[0]
             
             # Screen 1: Holding 
-            if self.cont >= 0 and self.cont < 4:
+            if self.cont >= 0 and self.cont < 5:
                 self.draw_circule (img)
+                start_sup, end_sup = self.draw_line_top (img)
+                start_inf, end_inf = self.draw_line_bottom (img)
+                
                 x,y = self.position (img, results,mpPose,mpDraw,15)
-                
-                
-                
+                         
                 self.flight_ball(5000, img)
+                         
                 
-                print(self.y_bola)
+                if (self.y_bola-DIAMETER//2) >= start_sup[1] and (self.y_bola-DIAMETER//2) <= start_inf[1]:
+                    self.erro_bola+=abs(self.y_bola-DIAMETER//2-y)
+                
+                    
                   
                  
                 
@@ -84,13 +129,19 @@ class Background:
                                           
             
             # Screen 2: Stimulus 
-            if self.cont >= 4 and self.cont < 5:
+            if self.cont >= 5 and self.cont < 10:
                 x,y = self.position (img, results,mpPose,mpDraw,15)
-                print('tela 2: ', str(x))
+                self.text (img, 100,100, str(self.erro_bola))
+             
             
             #set all
-            if self.cont >=3 and self.cont < 4:
+            if self.cont >=10 and self.cont < 11:
+                self.trial +=1
+                #np.savetxt('results/trial_'+ str(self.trial)+'.csv', self.deriva, delimiter=',')
+                                
                 self.current_time = []
+                self.deriva = []
+                self.erro_bola = 0
             
                                         
             
